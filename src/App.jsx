@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   calcularMapaCompleto,
   ARCANOS,
+  numerosHarmonicos,
 } from './numerologia.js';
 
 // ---- Helper components ----
@@ -42,19 +43,13 @@ function Card({ title, children, className = '' }) {
 }
 
 function NumberCard({ label, numero, sublabel }) {
-  const arcano = ARCANOS[numero] || ARCANOS[1];
   return (
     <Card>
       <div className="text-purple-300 text-xs font-semibold uppercase tracking-wider mb-2">{label}</div>
-      <div className="flex items-center gap-3 mb-2">
+      <div className="flex items-center gap-3">
         <Badge n={numero} />
-        <div>
-          <div className="text-white font-bold">{arcano.nome}</div>
-          <div className="text-purple-300 text-sm italic">{arcano.palavra_chave}</div>
-        </div>
+        {sublabel && <div className="text-purple-400 text-sm">{sublabel}</div>}
       </div>
-      {sublabel && <div className="text-purple-400 text-xs mt-1">{sublabel}</div>}
-      <div className="text-white/60 text-xs mt-2 leading-relaxed">{arcano.positivo}</div>
     </Card>
   );
 }
@@ -530,6 +525,354 @@ function PiramideTab({ mapa }) {
   );
 }
 
+// ---- Tab: Detalhes do Mapa ----
+
+function DetalhesMapaTab({ mapa }) {
+  const numeros = [
+    { label: 'Motivação (Alma)',         numero: mapa.motivacao,             sublabel: 'O que move sua alma internamente' },
+    { label: 'Impressão (Ego)',          numero: mapa.impressao,             sublabel: 'Como os outros te percebem' },
+    { label: 'Expressão (Nome)',         numero: mapa.expressao,             sublabel: 'Potencial de expressão e missão' },
+    { label: 'Destino',                  numero: mapa.destino,               sublabel: 'Caminho kármico desta vida' },
+    { label: 'Missão',                   numero: mapa.missao,                sublabel: 'Propósito superior' },
+    { label: 'Dia Natalício',            numero: mapa.diaNatalicio,          sublabel: 'Dom especial de nascimento' },
+    { label: 'Ano Pessoal',              numero: mapa.anoPessoal,            sublabel: 'Tema do ano atual' },
+    { label: 'Tendência Oculta',         numero: mapa.tendenciaOculta,       sublabel: 'Energia dominante no nome' },
+    { label: 'Resposta Subconsciente',   numero: mapa.respostaSubconsciente, sublabel: 'Reação instintiva sob pressão' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white text-center">Detalhes do Mapa</h2>
+      <p className="text-purple-300 text-center text-sm">
+        Interpretações dos arcanos correspondentes aos seus números pessoais
+      </p>
+      <div className="space-y-4">
+        {numeros.map(({ label, numero, sublabel }) => {
+          const arcano = ARCANOS[numero] || ARCANOS[1];
+          const isMaster = [11, 22, 33].includes(numero);
+          return (
+            <Card key={label}>
+              <div className="flex items-start gap-4">
+                <Badge n={numero} />
+                <div className="flex-1">
+                  <div className="text-purple-300 text-xs uppercase tracking-wider mb-0.5">{label}</div>
+                  <div className="text-white font-bold text-lg leading-tight">{arcano.nome}</div>
+                  <div className="text-purple-300 text-sm italic mb-1">{arcano.palavra_chave}</div>
+                  <div className="text-purple-400 text-xs mb-3">{sublabel}</div>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-green-400 text-xs font-semibold uppercase tracking-wider">Aspectos Positivos</span>
+                      <p className="text-white/80 text-sm mt-1 leading-relaxed">{arcano.positivo}</p>
+                    </div>
+                    <div>
+                      <span className="text-red-400 text-xs font-semibold uppercase tracking-wider">Aspectos Desafiadores</span>
+                      <p className="text-white/80 text-sm mt-1 leading-relaxed">{arcano.negativo}</p>
+                    </div>
+                    {isMaster && (
+                      <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-xl p-3 mt-2">
+                        <span className="text-yellow-400 text-xs font-semibold">★ Número Mestre</span>
+                        <p className="text-white/70 text-xs mt-1">
+                          Vibração elevada com responsabilidade espiritual maior. Nunca deve ser reduzido nas interpretações.
+                        </p>
+                      </div>
+                    )}
+                    {arcano.divida_karmica && (
+                      <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mt-2">
+                        <span className="text-red-400 text-xs font-semibold">⚠ Dívida Kármica</span>
+                        {arcano.nota && <p className="text-white/70 text-xs mt-1">{arcano.nota}</p>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---- Tab: Gráfico Numerológico ----
+
+function GraficoTab({ mapa }) {
+  const {
+    nome, motivacao, impressao, expressao, destino, missao,
+    diaNatalicio, anoPessoal, mesPessoal, diaPessoal,
+    licoesKarmicas, tendenciaOculta, respostaSubconsciente,
+    dividasKarmicas, coresFavoritas, ciclos, desafios, momentosDecisivos,
+    harmonia, breakdown, freqLetras, diasFavoraveis,
+  } = mapa;
+
+  const numHarm = numerosHarmonicos(expressao);
+  const isMaster = n => [11, 22, 33].includes(n);
+  const numColor = n => isMaster(n) ? 'text-yellow-400' : 'text-white';
+
+  const FigBox = ({ title, children, className = '' }) => (
+    <div className={`bg-white/10 border border-white/20 rounded-2xl p-4 ${className}`}>
+      {title && (
+        <div className="text-purple-300 text-xs font-bold uppercase tracking-wider border-b border-white/10 pb-1.5 mb-3">
+          {title}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-white text-center">Gráfico Numerológico</h2>
+
+      {/* Fig. A — Tabela do nome */}
+      <FigBox title={`Fig. A — ${nome.toUpperCase()}`}>
+        <div className="overflow-x-auto">
+          <table className="border-collapse text-center mx-auto text-xs">
+            <tbody>
+              {/* Vogais */}
+              <tr>
+                <td className="text-right pr-2 text-purple-300 font-semibold whitespace-nowrap py-0.5">Vogais</td>
+                {breakdown.flatMap((word, wi) => [
+                  ...word.letras.map((l, li) => (
+                    <td key={`v-${wi}-${li}`} className="border border-white/10 w-6 h-6">
+                      {l.isVogal && <span className="text-green-300 font-bold">{l.valor}</span>}
+                    </td>
+                  )),
+                  <td key={`vs-${wi}`} className="border border-white/30 bg-purple-950/50 w-8 h-6 text-green-300 font-bold px-1">
+                    {word.somaVogais || ''}
+                  </td>,
+                ])}
+              </tr>
+              {/* Letras */}
+              <tr>
+                <td className="text-right pr-2 text-purple-300 font-semibold whitespace-nowrap py-0.5">Nome</td>
+                {breakdown.flatMap((word, wi) => [
+                  ...word.letras.map((l, li) => (
+                    <td key={`n-${wi}-${li}`} className="border border-white/30 w-6 h-8 font-bold text-white">
+                      {l.letra}
+                    </td>
+                  )),
+                  <td key={`ns-${wi}`} className="border border-white/30 bg-purple-950/50 w-8 h-8"></td>,
+                ])}
+              </tr>
+              {/* Consoantes */}
+              <tr>
+                <td className="text-right pr-2 text-purple-300 font-semibold whitespace-nowrap py-0.5">Consoante</td>
+                {breakdown.flatMap((word, wi) => [
+                  ...word.letras.map((l, li) => (
+                    <td key={`c-${wi}-${li}`} className="border border-white/10 w-6 h-6">
+                      {!l.isVogal && <span className="text-blue-300 font-bold">{l.valor}</span>}
+                    </td>
+                  )),
+                  <td key={`cs-${wi}`} className="border border-white/30 bg-purple-950/50 w-8 h-6 text-blue-300 font-bold px-1">
+                    {word.somaConsoantes || ''}
+                  </td>,
+                ])}
+              </tr>
+              {/* Totais por palavra */}
+              <tr>
+                <td className="text-right pr-2 text-purple-300 font-semibold whitespace-nowrap py-0.5">TOTAL</td>
+                {breakdown.flatMap((word, wi) => [
+                  ...word.letras.map((_, li) => (
+                    <td key={`t-${wi}-${li}`} className="border border-white/10 w-6 h-6 bg-white/5"></td>
+                  )),
+                  <td key={`ts-${wi}`} className="border border-white/30 bg-purple-950/50 w-8 h-6 text-yellow-300 font-bold px-1">
+                    {word.somaTotal}
+                  </td>,
+                ])}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Três números principais */}
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          {[
+            { label: 'N° de Motivação', valor: motivacao },
+            { label: 'N° de Impressão', valor: impressao },
+            { label: 'N° de Expressão', valor: expressao },
+          ].map(({ label, valor }) => (
+            <div key={label} className="border border-white/20 rounded-xl p-3 text-center">
+              <div className="text-purple-300 text-xs mb-1">{label}</div>
+              <div className={`text-2xl font-bold ${numColor(valor)}`}>{valor}</div>
+            </div>
+          ))}
+        </div>
+      </FigBox>
+
+      {/* Fig. B + C/D + E */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Fig. B */}
+        <FigBox title="Fig. B — Lições Kármicas">
+          <div className="grid grid-cols-5 gap-1">
+            {[1,2,3,4,5,6,7,8,9].map(n => (
+              <div key={n} className={`h-8 flex items-center justify-center rounded border text-xs font-bold
+                ${licoesKarmicas.includes(n)
+                  ? 'bg-orange-500/30 border-orange-400/50 text-orange-300'
+                  : 'bg-white/5 border-white/10 text-white/30'}`}>
+                {n}
+              </div>
+            ))}
+          </div>
+          <p className="text-purple-400 text-xs mt-2">Destacado = ausente no nome</p>
+        </FigBox>
+
+        {/* Fig. C + D */}
+        <FigBox>
+          <div className="text-purple-300 text-xs font-bold uppercase tracking-wider border-b border-white/10 pb-1.5 mb-3">
+            Fig. C — Tendências Ocultas
+          </div>
+          <div className="flex items-center gap-3 mb-4">
+            <Badge n={tendenciaOculta} />
+            <span className="text-white text-sm">Tendência Oculta</span>
+          </div>
+          <div className="text-purple-300 text-xs font-bold uppercase tracking-wider border-b border-white/10 pb-1.5 mb-3">
+            Fig. D — Resp. Subconsciente
+          </div>
+          <div className="flex items-center gap-3">
+            <Badge n={respostaSubconsciente} />
+            <span className="text-white text-sm">Reação Instintiva</span>
+          </div>
+        </FigBox>
+
+        {/* Fig. E */}
+        <FigBox title="Fig. E — Destino e Missão">
+          {dividasKarmicas.length > 0 && (
+            <div className="mb-3">
+              <div className="text-red-400 text-xs font-semibold mb-1">Dívidas Kármicas</div>
+              <div className="flex flex-wrap gap-1">
+                {dividasKarmicas.map((d, i) => (
+                  <span key={i} className="bg-red-500/20 border border-red-500/30 rounded px-2 py-0.5 text-red-300 text-xs font-bold">
+                    {d.numero}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="border border-white/20 rounded-xl p-3 text-center">
+              <div className="text-purple-300 text-xs mb-1">N° de Destino</div>
+              <div className={`text-2xl font-bold ${numColor(destino)}`}>{destino}</div>
+            </div>
+            <div className="border border-white/20 rounded-xl p-3 text-center">
+              <div className="text-purple-300 text-xs mb-1">Missão</div>
+              <div className={`text-2xl font-bold ${numColor(missao)}`}>{missao}</div>
+            </div>
+          </div>
+          <div className="border border-white/20 rounded-xl p-3 text-center mt-3">
+            <div className="text-purple-300 text-xs mb-1">Dia Natalício</div>
+            <div className={`text-2xl font-bold ${numColor(diaNatalicio)}`}>{diaNatalicio}</div>
+          </div>
+        </FigBox>
+      </div>
+
+      {/* Fig. F + G + H */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <FigBox title="Fig. F — Ciclos de Vida">
+          {ciclos.map((c, i) => (
+            <div key={i} className="flex items-center gap-3 mb-3 last:mb-0">
+              <span className={`text-2xl font-bold w-8 ${numColor(c.numero)}`}>{c.numero}</span>
+              <span className="text-purple-300 text-xs">{c.inicio}–{c.fim != null ? c.fim : '∞'} anos</span>
+            </div>
+          ))}
+        </FigBox>
+
+        <FigBox title="Fig. G — Momentos Decisivos">
+          {momentosDecisivos.map((p, i) => (
+            <div key={i} className="flex items-center gap-3 mb-3 last:mb-0">
+              <span className={`text-2xl font-bold w-8 ${numColor(p.numero)}`}>{p.numero}</span>
+              <span className="text-purple-300 text-xs">{p.inicio}–{p.fim != null ? p.fim : '∞'} anos</span>
+            </div>
+          ))}
+        </FigBox>
+
+        <FigBox title="Fig. H — Desafios">
+          {desafios.map((d, i) => (
+            <div key={i} className="flex items-center gap-3 mb-3 last:mb-0">
+              <span className="text-2xl font-bold text-white w-8">{d.numero}</span>
+              <span className="text-purple-300 text-xs">{d.label}</span>
+            </div>
+          ))}
+        </FigBox>
+      </div>
+
+      {/* Total de Letras + Números Harmônicos + Dias Favoráveis */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <FigBox title="Total de Letras em Cada Número">
+          <div className="grid grid-cols-9 gap-px">
+            {[1,2,3,4,5,6,7,8,9].map(n => (
+              <div key={n} className="text-center">
+                <div className="text-purple-400 text-xs border-b border-white/10 pb-0.5 mb-1">{n}</div>
+                <div className={`text-sm font-bold ${freqLetras[n] === 0 ? 'text-white/20' : 'text-white'}`}>
+                  {freqLetras[n] === 0 ? '∅' : freqLetras[n]}
+                </div>
+              </div>
+            ))}
+          </div>
+        </FigBox>
+
+        <FigBox title="Números Harmônicos">
+          <div className="flex flex-wrap gap-1.5">
+            {numHarm.map(n => (
+              <span key={n} className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500/20 border border-green-500/30 text-green-300 text-sm font-bold">
+                {n}
+              </span>
+            ))}
+          </div>
+          <p className="text-purple-400 text-xs mt-2">Baseado na Expressão ({expressao})</p>
+        </FigBox>
+
+        <FigBox title="Dias do Mês Favoráveis">
+          <div className="flex flex-wrap gap-1">
+            {diasFavoraveis.map(d => (
+              <span key={d} className="w-7 h-7 flex items-center justify-center rounded border border-green-500/30 bg-green-500/10 text-green-300 text-xs font-bold">
+                {d}
+              </span>
+            ))}
+            {diasFavoraveis.length === 0 && (
+              <span className="text-purple-400 text-xs">Nenhum no mês atual</span>
+            )}
+          </div>
+          <div className="border-t border-white/10 pt-2 mt-2 space-y-0.5">
+            <div className="text-purple-300 text-xs">Ano Pessoal: <span className={`font-bold ${numColor(anoPessoal)}`}>{anoPessoal}</span></div>
+            <div className="text-purple-300 text-xs">Mês Pessoal: <span className={`font-bold ${numColor(mesPessoal)}`}>{mesPessoal}</span></div>
+            <div className="text-purple-300 text-xs">Dia Pessoal: <span className={`font-bold ${numColor(diaPessoal)}`}>{diaPessoal}</span></div>
+          </div>
+        </FigBox>
+      </div>
+
+      {/* Cores + Harmonia */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {coresFavoritas.length > 0 && (
+          <FigBox title="Cores Favoráveis">
+            <div className="flex flex-wrap gap-2">
+              {coresFavoritas.map((cor, i) => (
+                <span key={i} className="bg-white/10 border border-white/20 rounded-full px-3 py-1 text-white text-sm">
+                  {cor}
+                </span>
+              ))}
+            </div>
+          </FigBox>
+        )}
+
+        {harmonia && harmonia.status !== 'desconhecido' && (
+          <FigBox title="Harmonia Numérica (Destino × Expressão)">
+            <div className={`p-3 rounded-xl border text-sm
+              ${harmonia.status === 'favoravel'    ? 'bg-green-500/10 border-green-500/20 text-green-300'  :
+                harmonia.status === 'desfavoravel' ? 'bg-red-500/10 border-red-500/20 text-red-300'        :
+                'bg-yellow-500/10 border-yellow-500/20 text-yellow-300'}`}>
+              <div className="font-bold mb-1">
+                {harmonia.status === 'favoravel' ? '★ Favorável' :
+                 harmonia.status === 'desfavoravel' ? '▲ Desfavorável' : '◆ Neutro'}
+              </div>
+              {harmonia.descricao}
+            </div>
+          </FigBox>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---- Tab: 9 Arcanos ----
 
 const POSICOES_LABELS = [
@@ -651,9 +994,11 @@ function InterpretacoesTab() {
 const TABS = [
   { id: 'home',           label: '✦ Início' },
   { id: 'mapa',           label: '🗺 Mapa' },
+  { id: 'grafico',        label: '📊 Gráfico' },
+  { id: 'detalhes',       label: '📖 Detalhes' },
   { id: 'piramide',       label: '△ Pirâmide' },
   { id: 'arcanos9',       label: '✦ 9 Arcanos' },
-  { id: 'interpretacoes', label: '📖 Interpretações' },
+  { id: 'interpretacoes', label: '📚 Arcanos' },
 ];
 
 export default function App() {
@@ -718,6 +1063,14 @@ export default function App() {
 
         {tabAtiva === 'mapa' && mapa && (
           <MapaCompletoTab mapa={mapa} />
+        )}
+
+        {tabAtiva === 'grafico' && mapa && (
+          <GraficoTab mapa={mapa} />
+        )}
+
+        {tabAtiva === 'detalhes' && mapa && (
+          <DetalhesMapaTab mapa={mapa} />
         )}
 
         {tabAtiva === 'piramide' && mapa && (
