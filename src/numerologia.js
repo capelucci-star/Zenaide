@@ -521,6 +521,9 @@ export function calcularMapaCompleto(nome, dataStr, tabela = 'abnc') {
 
   const coresFavoritas = CORES_FAVORITAS[expressao] || CORES_FAVORITAS[reduzir(expressao, false)] || [];
   const letrasNome = nome.split('').filter(c => isAlpha(c));
+  const breakdown = calcularBreakdownNome(nome, tabela);
+  const freqLetras = calcularFrequenciaLetras(nome, tabela);
+  const diasFavoraveis = calcularDiasFavoraveis(expressao, hoje.getMonth() + 1, hoje.getFullYear());
 
   let arcanoDominante = null;
   if (piramide.length > 0) {
@@ -537,8 +540,44 @@ export function calcularMapaCompleto(nome, dataStr, tabela = 'abnc') {
     piramide, letrasNome, sequenciasNegativas,
     ciclos, desafios, momentosDecisivos,
     arcanos9, dividasKarmicas, coresFavoritas, arcanoDominante,
+    breakdown, freqLetras, diasFavoraveis,
     arcanos: ARCANOS,
   };
+}
+
+export function calcularBreakdownNome(nome, tabela = 'abnc') {
+  const palavras = nome.trim().split(/\s+/);
+  return palavras.map(palavra => {
+    const letras = [];
+    for (const c of palavra) {
+      if (isAlpha(c)) {
+        const upper = c.toUpperCase();
+        letras.push({ letra: upper, valor: valorLetra(upper, tabela), isVogal: isVogal(upper) });
+      }
+    }
+    const sv = letras.filter(l => l.isVogal).reduce((a, l) => a + l.valor, 0);
+    const sc = letras.filter(l => !l.isVogal).reduce((a, l) => a + l.valor, 0);
+    const st = letras.reduce((a, l) => a + l.valor, 0);
+    return {
+      palavra: palavra.toUpperCase(),
+      letras,
+      somaVogais:      sv > 0 ? reduzir(sv, true) : 0,
+      somaConsoantes:  sc > 0 ? reduzir(sc, true) : 0,
+      somaTotal:       st > 0 ? reduzir(st, true) : 0,
+    };
+  });
+}
+
+export function calcularFrequenciaLetras(nome, tabela = 'abnc') {
+  const freq = {};
+  for (let i = 1; i <= 9; i++) freq[i] = 0;
+  for (const c of nome) {
+    if (isAlpha(c)) {
+      const v = reduzir(valorLetra(c, tabela), false);
+      if (v >= 1 && v <= 9) freq[v]++;
+    }
+  }
+  return freq;
 }
 
 export { CORES_FAVORITAS, SEQUENCIAS_NEGATIVAS, DIVIDAS_KARMICAS, HARMONIA_NUMERICA };
