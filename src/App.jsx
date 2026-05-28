@@ -64,7 +64,7 @@ function NumberCard({ label, numero, sublabel }) {
 function HomeTab({ onSubmit }) {
   const [nome, setNome] = useState('');
   const [data, setData] = useState('');
-  const [tabela, setTabela] = useState('ciclo19');
+  const [tabela, setTabela] = useState('abnc');
   const [erros, setErros] = useState({});
 
   function validate() {
@@ -148,8 +148,8 @@ function HomeTab({ onSubmit }) {
             </label>
             <div className="flex gap-3">
               {[
-                { value: 'ciclo19', label: 'Ciclo 1-9' },
-                { value: 'ciclo18', label: 'Ciclo 1-8 (Cabalística pura)' },
+                { value: 'abnc', label: 'ABNC (Cabalística)' },
+                { value: 'ciclo19', label: 'Ciclo 1-9 (Pitagórica)' },
               ].map(opt => (
                 <button
                   key={opt.value}
@@ -186,6 +186,7 @@ function MapaCompletoTab({ mapa }) {
     diaNatalicio, anoPessoal, mesPessoal,
     licoesKarmicas, tendenciaOculta, respostaSubconsciente,
     dividasKarmicas, coresFavoritas, ciclos, desafios, momentosDecisivos,
+    harmonia,
   } = mapa;
 
   return (
@@ -204,6 +205,42 @@ function MapaCompletoTab({ mapa }) {
           <NumberCard label="Dia Natalício" numero={diaNatalicio} sublabel="Dom de nascimento" />
         </div>
       </div>
+
+      {/* Harmonia Numérica */}
+      {harmonia && harmonia.status !== 'desconhecido' && (
+        <Card title="Harmonia Numérica — Destino × Expressão">
+          <div className={`flex items-start gap-3 p-3 rounded-xl border
+            ${harmonia.status === 'favoravel'
+              ? 'bg-green-500/10 border-green-500/30'
+              : harmonia.status === 'desfavoravel'
+              ? 'bg-red-500/10 border-red-500/30'
+              : 'bg-yellow-500/10 border-yellow-500/30'}`}
+          >
+            <span className={`text-2xl shrink-0
+              ${harmonia.status === 'favoravel' ? '⭐' : harmonia.status === 'desfavoravel' ? '⚠️' : '◈'}`}>
+              {harmonia.status === 'favoravel' ? '★' : harmonia.status === 'desfavoravel' ? '▲' : '◆'}
+            </span>
+            <div>
+              <div className={`font-semibold text-sm
+                ${harmonia.status === 'favoravel'
+                  ? 'text-green-300'
+                  : harmonia.status === 'desfavoravel'
+                  ? 'text-red-300'
+                  : 'text-yellow-300'}`}>
+                {harmonia.status === 'favoravel'
+                  ? 'Favorável'
+                  : harmonia.status === 'desfavoravel'
+                  ? 'Desfavorável'
+                  : 'Neutro'}
+              </div>
+              <div className="text-white/70 text-sm mt-1">{harmonia.descricao}</div>
+            </div>
+          </div>
+          <p className="text-purple-400 text-xs mt-3">
+            Indica se a vibração do seu Número de Expressão está em harmonia com o Número de Destino.
+          </p>
+        </Card>
+      )}
 
       {/* Números pessoais */}
       <div>
@@ -701,7 +738,7 @@ export default function App() {
         <div>Zenaide — Numerologia Cabalística</div>
         {mapa && (
           <div className="mt-1">
-            Tabela: {mapa.tabela === 'ciclo19' ? 'Ciclo 1-9' : 'Ciclo 1-8 (Cabalística pura)'}
+            Tabela: {mapa.tabela === 'abnc' ? 'ABNC (Cabalística)' : 'Ciclo 1-9 (Pitagórica)'}
           </div>
         )}
       </footer>
